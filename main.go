@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"net"
+	"fmt"
+	"io"
 )
 
 func main() {
@@ -14,18 +16,18 @@ func main() {
 	defer ln.Close()
 
 	for {
-		conn, err := ln.Accept()
+		clientConn, err := ln.Accept()
 		if err != nil {
 			log.Printf("Error accepting connection: %v", err)
 			continue
 		}
 
-		go handleConnection(conn)
+		go handleConnection(clientConn)
 	}
 }
 
-func handleConnection(conn net.Conn) {
-	defer conn.Close()
+func handleConnection(clientConn net.Conn) {
+	defer clientConn.Close()
 	serverConnection, err := net.Dial("tcp", "localhost:8080")
 	if err != nil {
 		log.Printf("Error connecting to server: %v", err)
@@ -33,4 +35,13 @@ func handleConnection(conn net.Conn) {
 	}
 	defer serverConnection.Close()
 
+	go func() {
+	streamCopy, err := io.Copy(serverConnection, clientConn)
+	if err != nil {
+		log.Printf("Error copying data from client to server: %v", err)
+		return
+	}
+
+	fmt.Printf("Copied %d bytes from client to server\n", streamCopy)
+	}()
 }
