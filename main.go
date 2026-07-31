@@ -9,6 +9,7 @@ import (
 
 var servers = []string{
 	"localhost:8080",
+	"localhost:8081",
 }
 
 var counter = 0
@@ -41,6 +42,7 @@ func handleConnection(clientConn net.Conn) {
 		return
 	}
 	defer serverConnection.Close()
+	fmt.Printf("Connected to server: %s\n", servers[counter%len(servers)])
 
 	go func() {
 		clientCopy, err := io.Copy(serverConnection, clientConn)
