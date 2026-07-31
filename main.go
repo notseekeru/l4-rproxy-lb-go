@@ -1,11 +1,17 @@
 package main
 
 import (
-	"log"
-	"net"
 	"fmt"
 	"io"
+	"log"
+	"net"
 )
+
+var servers = []string{
+	"localhost:8080",
+}
+
+var counter = 0
 
 func main() {
 	ln, err := net.Listen("tcp", ":9000")
@@ -28,7 +34,8 @@ func main() {
 
 func handleConnection(clientConn net.Conn) {
 	defer clientConn.Close()
-	serverConnection, err := net.Dial("tcp", "localhost:8080")
+	counter++
+	serverConnection, err := net.Dial("tcp", servers[counter%len(servers)])
 	if err != nil {
 		log.Printf("Error connecting to server: %v", err)
 		return
@@ -36,13 +43,13 @@ func handleConnection(clientConn net.Conn) {
 	defer serverConnection.Close()
 
 	go func() {
-	clientCopy, err := io.Copy(serverConnection, clientConn)
-	if err != nil {
-		log.Printf("Error copying data from client to server: %v", err)
-		return
-	}
+		clientCopy, err := io.Copy(serverConnection, clientConn)
+		if err != nil {
+			log.Printf("Error copying data from client to server: %v", err)
+			return
+		}
 
-	fmt.Printf("Copied %d bytes from client to server\n", clientCopy)
+		fmt.Printf("Copied %d bytes from client to server\n", clientCopy)
 	}()
 
 	serverCopy, err := io.Copy(clientConn, serverConnection)
