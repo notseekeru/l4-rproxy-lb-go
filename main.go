@@ -36,12 +36,19 @@ func handleConnection(clientConn net.Conn) {
 	defer serverConnection.Close()
 
 	go func() {
-	streamCopy, err := io.Copy(serverConnection, clientConn)
+	clientCopy, err := io.Copy(serverConnection, clientConn)
 	if err != nil {
 		log.Printf("Error copying data from client to server: %v", err)
 		return
 	}
 
-	fmt.Printf("Copied %d bytes from client to server\n", streamCopy)
+	fmt.Printf("Copied %d bytes from client to server\n", clientCopy)
 	}()
+
+	serverCopy, err := io.Copy(clientConn, serverConnection)
+	if err != nil {
+		log.Printf("Error copying data from server to client: %v", err)
+		return
+	}
+	fmt.Printf("Copied %d bytes from server to client\n", serverCopy)
 }
